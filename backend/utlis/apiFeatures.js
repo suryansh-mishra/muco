@@ -19,7 +19,7 @@ class APIFeature {
     return this;
   }
   pagination() {
-    const limit = this.queryString.limit * 1 || 20;
+    const limit = this.queryString.limit * 1 || 10;
     const page = this.queryString.page * 1 || 1;
     const skip = (page - 1) * limit;
     this.query.skip(skip).limit(limit);

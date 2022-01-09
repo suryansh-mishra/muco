@@ -2,7 +2,7 @@ const User = require("./../Models/userModels");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
-const sendEmail = require("./../utlis/email");
+const Email = require("./../utlis/email");
 const userController = require("./userController");
 const catchAsync = require("./../utlis/catchAsync");
 const AppError = require("./../utlis/appError");
@@ -14,24 +14,42 @@ const signToken = (id) => {
   });
 };
 
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
+  //console.log("Token", token);
+  res.cookie("jwt", token, cookieOptions);
+  // Remove password from output
+  user.password = undefined;
+
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    data: {
+      user,
+    },
+  });
+};
 ////A function that calls the sendEmail function, which eventually sends the mail
-const sendmail = async (res, user, message, subject, signUp) => {
+const sendmail = async (res, user, url, subject, signUp) => {
   try {
-    await sendEmail({
-      email: user.email,
-      subject: `${subject}`,
-      message: message,
-    });
+    await new Email(user, url).sendWelcome();
     res.status(200).json({
       status: "success",
-      message: "Reset Token sent to you mail Id",
+      message: subject,
     });
   } catch (err) {
     if (signUp) {
       await User.deleteOne({ _id: user._id });
     }
     res.status(400).json({
-      status: "Fail",
+      status: "Failed to send mail, try again",
       message: err,
     });
   }
@@ -65,14 +83,13 @@ exports.signupcreate = catchAsync(async (req, res, next) => {
   user.password = undefined;
   user.verifyToken = undefined;
   user.verified = undefined;
-  const verifyURL = `${req.protocol}://${req.get(
+  const url = `${req.protocol}://${req.get(
     "host"
-  )}/api/v1/users/signup/${verifyToken}`;
+  )}/users/signup/${verifyToken}`;
 
   /////message contains a link that is sent to User's mail, cliking on the link will verify the mailID
-  const message = `Verify your mailID, Inorder to login into MUCO,${verifyURL} `;
   const subject = "Verification mail sent to your mailID, kindly verify it";
-  sendmail(res, user, message, subject, true);
+  sendmail(res, user, url, subject, true);
 });
 
 ////To verify the MailID
@@ -82,40 +99,24 @@ exports.signupverified = catchAsync(async (req, res, next) => {
     verifyTokenExpires: { $gte: Date.now() },
   });
   if (!user) {
-    return next(
-      new AppError(
-        "Invalid Token or token expired, fill the Sign Up form again",
-        400
-      )
-    );
+    return next(new AppError("Invalid Token or token expired", 400));
+  }
+  if (user.verified) {
+    res.status(200).json({
+      status: "success",
+      message: "Verified",
+    });
   }
   user.verified = true;
-  user.verifyToken = undefined;
   User.verifyTokenExpires = undefined;
   await user.save({ validateBeforeSave: false });
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: "success",
-    message: "Welcome to Muco",
-    token,
-    data: {
-      user,
-    },
-  });
+  createSendToken(user, 200, res);
 });
 
 ////To login
 exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: "success",
-    message: "Welcome to Muco",
-    token,
-    data: {
-      user,
-    },
-  });
+  createSendToken(user, 200, res);
 });
 
 /////If the user forgets his password then a Reset Token is created which is sent to the mail
@@ -124,12 +125,12 @@ exports.passwordResetToken = catchAsync(async (req, res, next) => {
   if (!user) return next(new AppError("Reset Token sent to your mail ID", 200));
   const resetToken = user.verifytoken();
   await user.save({ validateBeforeSave: false });
-  const resetURL = `${req.protocol}://${req.get(
+  const url = `${req.protocol}://${req.get(
     "host"
   )}/api/v1/users/passwordReset/${resetToken}`;
-  const message = `Verify your mailID, Inorder to login into MUCO,${resetURL} `;
-  const subject = "Your password reset token (valid for 10 min)";
-  sendmail(res, user, message, subject, false);
+  const subject =
+    "Your password reset token sent to your mail id(valid for 10 min)";
+  sendmail(res, user, url, subject, false);
 });
 
 /////On clicking the link, a page will open to create a new password
@@ -146,7 +147,7 @@ exports.passwordReset = catchAsync(async (req, res, next) => {
   user.verifyToken = undefined;
   await user.save();
   res.status(201).json({
-    status: "Success",
+    status: "success",
     message: "Password Changed",
     data: {
       user,
@@ -171,7 +172,7 @@ exports.passwordUpdate = catchAsync(async (req, res, next) => {
   await user.save();
   const token = signToken(user._id);
   res.status(200).json({
-    status: "Success",
+    status: "success",
     message: "Your Password has been reset,Please Login again",
     url: `${req.protocol}://${req.get("host")}/api/v1/users/login`,
     token,
@@ -187,10 +188,16 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
   ///This function will eliminate the unauthorized fields
   const filteredobj = filterobj(req.body, "city", "name");
-
-  const user = await User.updateOne({ _id: req._id }, filteredobj);
+  //console.log("hey", filteredobj);
+  const user = await User.findOneAndUpdate({ _id: req._id }, filteredobj, {
+    runValidators: true,
+    new: true,
+  });
   res.status(201).json({
-    status: "Success",
-    message: `${Object.keys(filteredobj)} changed`,
+    status: "success",
+    message: `Profile Updated`,
+    data: {
+      value: filteredobj,
+    },
   });
 });

@@ -19,6 +19,10 @@ const postSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "City",
     },
+    cityName: {
+      type: mongoose.Schema.ObjectId,
+      ref: "City",
+    },
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
@@ -65,13 +69,17 @@ const postSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+postSchema.index({ createdAt: -1 });
 postSchema.virtual("reply", {
   ref: "Reply",
   foreignField: "post",
   localField: "_id",
 });
 postSchema.pre(/^find/, function (next) {
-  this.populate({ path: "user", select: "name _id profile" });
+  this.populate({ path: "user", select: "name _id profile city" }).populate({
+    path: "cityName",
+    select: "name _id",
+  });
   next();
 });
 postSchema.methods.populateReply = function () {

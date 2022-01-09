@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const City = require("./../Models/cityModel");
 const reviewSchema = new mongoose.Schema({
   review: {
     type: String,
@@ -12,7 +13,7 @@ const reviewSchema = new mongoose.Schema({
     min: [1, "Minimum rating shall be one"],
     max: [5, "Maximum rating shall be 5"],
   },
-  image: String,
+  image: [String],
   city: {
     type: mongoose.Schema.ObjectId,
     ref: "City",
@@ -35,7 +36,7 @@ const reviewSchema = new mongoose.Schema({
 });
 reviewSchema.index({ post: 1, user: 1 }, { unique: true });
 reviewSchema.pre(/^find/, function (next) {
-  this.populate({ path: "user", select: "name profile _id" });
+  this.populate({ path: "user", select: "name profile _id city" });
   next();
 });
 
@@ -66,6 +67,7 @@ reviewSchema.statics.calcAverageRating = async function (cityId) {
 };
 reviewSchema.pre("save", function (next) {
   this.constructor.calcAverageRating(this.city);
+  next();
 });
 
 reviewSchema.pre(/^findByIdAnd/, async function (next) {
@@ -77,8 +79,9 @@ reviewSchema.pre(/^findByIdAnd/, async function (next) {
 reviewSchema.post(/^findByIdAnd/, async function () {
   // await this.findOne(); does NOT work here, query has already executed
   await this.rev.constructor.calcAverageRatings(this.rev.tour);
+  next();
 });
 
-reviewSchema.post(/^findByIdAnd/, function () {});
+//reviewSchema.post(/^findByIdAnd/, function () {});
 const Review = mongoose.model("Review", reviewSchema);
 module.exports = Review;

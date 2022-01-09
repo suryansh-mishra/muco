@@ -1,0 +1,164 @@
+doctype html
+head
+  meta(charset='UTF-8')
+  meta(http-equiv='X-UA-Compatible' content='IE=edge')
+  meta(name='viewport' content='width=device-width, initial-scale=1.0')
+  link(href='css/homepagestyle.css' rel='stylesheet')
+  link(rel='stylesheet' href='css/responsive.css')
+  link(rel='preconnect' href='https://fonts.googleapis.com')
+  link(rel='preconnect' href='https://fonts.gstatic.com' crossorigin='')
+  //
+    <link
+    href="https://fonts.googleapis.com/css2?family==Kanit:wght@800&family=Oxygen&display=swap"
+    rel="stylesheet"
+    />
+  // font awesome cdn
+  link(rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' integrity='sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==' crossorigin='anonymous' referrerpolicy='no-referrer')
+  link(href='https://fonts.googleapis.com/css2?family=Kanit:wght@800&family=Noto+Sans&family=Nunito:wght@600;700;800&family=Readex+Pro:wght@300;400;500;600;700&display=swap' rel='stylesheet')
+  title Homepage
+  script(defer='' src='js/homepage.js')
+body 
+
+.alert.hidden
+  p Lorem ipsum dolor sit amet consectetur, adipisicing elit. Vel!
+    
+.splash
+  .logo-splash
+    span.m M
+    span.u U
+    span.c C
+    span.o O
+// App Blur Div
+// <div class="app-blur hidden"></div>
+.app-wrapper
+  // Left navigation pane
+  #navMenuRight.nav
+    .nav__logo
+      span.m M
+      span.u U
+      span.c C
+      span.o O
+    .nav__options.nav__profile
+      img.nav__profile__user-img(src='/img/homepage/user-2.svg')
+      .nav__profile__user-name #{user.name}
+      .nav__profile__user-loc #{user.city}
+    .nav__options.nav__buttons.nav__user-home.active-nav(href='/home')
+      | Home
+    .nav__options.nav__buttons.nav__city City
+    .nav__options.nav__city-dropdown.hidden
+      li.nav_cities-list
+        ul.select_nav_city.select-ranchi
+          | Ranchi
+          // <div class="active-dot"></div>
+        ul.select_nav_city.select-mumbai
+          | Mumbai
+        ul.select_nav_city.select-chennai
+          | Chennai
+        ul.select_nav_city.select-kolkata
+          | Kolkata
+        ul.select_nav_city.select-bengaluru
+          | Bengaluru
+    .nav__options.nav__buttons.nav__user-posts Your Posts
+    .nav__options.nav__buttons.nav__liked-posts
+      | Liked Posts
+    button.nav__post Post!
+
+    .modals-wrapper.hidden
+        .post__modal.hidden
+            .post-md-header
+                .cross-modal.new-post-md-cross x
+                h5 New Post
+                button#up-new-post(type='submit') Post
+            form.create_post(action='' method='post')
+                textarea#new_post_text(name='post-content' maxlength='350' placeholder='Start writing your issue here!' required='')
+                .row-cont
+                    label(for='upload-imgs') Choose Images within 500KB: 
+                    input#new_post_imgs(name='upload-imgs' type='file' multiple='true' accept='.jpeg, .jpg, .png')
+                    label(for='issue-loc') Add Address
+                    button.address-add +
+                .add-address-map.hidden
+
+        // <div class="modals-container">
+        .profile__modal.hidden
+            .usr_prf-md-header
+                .usr_prf-md-head Profile
+                .cross-modal.usr_prf-md-cross x
+            .usr_prf-md-head-border
+            .usr_prf-edit
+                form.usr_prf-info
+                    .usr_prf-boxes
+                        label(for='email') Email
+                        input#usr-mail(type='text' placeholder=`${user.email}` readonly='readonly')
+                    br
+                    .usr_prf-boxes
+                        label#usr_prf-firstname(for='first_name') First Name
+                        input(type='text' class='first-name' placeholder=`${user.name.split(' ')[0]}`)
+                    br
+                    .usr_prf-boxes
+                        label#usr_prf-firstname(for='last_name') Last Name
+                        input(type='text' class='last-name' placeholder=`${user.name.split(' ')[1]}`)
+                    br
+                    .usr_prf-boxes
+                        label(for='city') City 
+                        input#city(type='text' class='user-cityname' placeholder=`${user.city}` name='city' list='city-list')
+                        datalist#city-list
+                        option(value='Delhi')
+                        option(value='Mumbai')
+                        option(value='Ranchi')
+                        option(value='Pune')
+                    br
+                    button#usr_info_save-changes(type='submit')
+                     | Save Changes
+                    br
+                form.usr_pwd-change
+                    .usr_pwd-boxes
+                        label(for='curr-pwd') Current Password
+                        input#usr_curr-pwd(type='password' name='curr-pwd')
+                    .usr_pwd-boxes
+                        label(for='new-pwd') New Password
+                        input#usr_new-pwd(type='password' name='new-pwd')
+                    .usr_pwd-boxes
+                        label(for='confirm-pwd') Confirm Password
+                        input#usr_confirm-pwd(type='password' name='confirm-pwd')
+                    button#usr_confirm-change-pwd(type='submit')
+                        | Change Password
+
+  .app-pane.hidden
+    #your_post_Main_container.user_posts-pg.pane-app.hidden
+      .first_container_your_posts
+         .status_your_post
+            #icon_yourPost.icon_yourPost
+            | Filter
+         #crossModel_yourPost.crossModel
+            .cross_yourPost
+            | x
+      li.usr_post-cat
+        ul.usr_pending-post.usr_post-cat-button(data-status='Pending')
+          | Pending
+        ul.usr_Inprogress-post.usr_post-cat-button(data-status='Pending')
+          | Inprogress
+        ul.usr_accepted-post.usr_post-cat-button(data-status='Accepted')
+          | Accepted
+        ul.usr_completed-post.usr_post-cat-button(data-status='Success')
+          | Completed
+        ul.usr_rejected-post.usr_post-cat-button(data-status='Rejected')
+          | Rejected
+        ul.usr_failed-post.usr_post-cat-button(data-status='Failed')
+          | Failed
+     
+      .usr_posts-container
+
+  // middle menu
+  // Timeline design
+  block timeline
+    h1 This is a timeline
+      // Closing brace of post 1
+    // Posts closing brace
+  // TL closing brace
+  // Right menu
+
+  block cityReview 
+  script(src='js/profile.js' defer)
+  script(src='js/yourPosts.js' defer)
+  
+  

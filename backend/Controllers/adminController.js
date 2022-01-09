@@ -4,6 +4,7 @@ const catchAsync = require("./../utlis/catchAsync");
 const AppError = require("./../utlis/appError");
 const User = require("./../Models/userModels");
 const Post = require("./../Models/postModel");
+const City = require("./../Models/cityModel");
 exports.fixProblem = catchAsync(async function (req, res, next) {
   if (!req.body.status)
     return next(new AppError("You must provide the status of the work", 400));

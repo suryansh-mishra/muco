@@ -49,15 +49,41 @@ exports.checkJWT = catchAsync(async (req, res, next) => {
   ) {
     token = req.headers.authorization.split(" ")[1];
   }
-
+  if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
   const currentUser = await User.findById(decoded.id);
-  console.log(currentUser);
+  //console.log(currentUser);
   if (!currentUser) return next(new AppError("Invalid User ", 401));
 
   ///To check if the JWT is issued, after the password is changed.
   if (currentUser.changedPasswordAfter(decoded.iat))
     return next(new AppError("Token Expired, Login again", 400));
   req._id = decoded.id;
+  next();
+});
+
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  try {
+    if (req.cookies.jwt) {
+      // console.log("Decoded", req.cookies.jwt);
+      const token = req.cookies.jwt;
+      const decoded = await promisify(jwt.verify)(
+        token,
+        process.env.JWT_SECRET
+      );
+
+      const currentUser = await User.findById(decoded.id);
+      //  console.log("hey", currentUser);
+      if (!currentUser) return next();
+
+      if (currentUser.changedPasswordAfter(decoded.iat)) return next();
+      res.locals.user = currentUser;
+    }
+  } catch (err) {
+    return next();
+  }
   next();
 });

@@ -4,7 +4,11 @@ const userController = require("./../Controllers/userController");
 const postController = require("./../Controllers/postController");
 const replyRouter = require("./../Routes/replyRoute");
 const reviewRouter = require("./reviewRouter.js");
-router.get("/getAllpost", userController.checkJWT, postController.getAllPost);
+router.get(
+  "/getAllpost/:city",
+  userController.checkJWT,
+  postController.getAllPost
+);
 router.get(
   "/getOnepost/:postId",
   userController.checkJWT,
@@ -21,5 +25,15 @@ router.patch(
   "/dislike/:id",
   userController.checkJWT,
   postController.disLikePost
+);
+router.get(
+  "/yourPost/:filter",
+  userController.checkJWT,
+  postController.getYourPosts
+);
+router.get(
+  "/getLikedPosts",
+  userController.checkJWT,
+  postController.getLikedPosts
 );
 module.exports = router;

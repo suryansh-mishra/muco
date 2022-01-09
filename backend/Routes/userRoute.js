@@ -9,7 +9,7 @@ router.post(
   authcontroller.signupcreate
 );
 router.patch("/signup/:token", authcontroller.signupverified);
-router.get("/login", userController.protect, authcontroller.login);
+router.post("/login", userController.protect, authcontroller.login);
 router.get("/passwordReset", authcontroller.passwordResetToken);
 router.patch("/passwordReset/:id", authcontroller.passwordReset);
 router.patch(

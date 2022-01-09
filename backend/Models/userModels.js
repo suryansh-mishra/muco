@@ -4,72 +4,88 @@ const validator = require("validator");
 const crypto = require("crypto");
 const { verify } = require("jsonwebtoken");
 const City = require("./cityModel");
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Please provide Your name"],
-    // trim: true
-  },
-  email: {
-    type: String,
-    required: [true, "Please provide your email"],
-    unique: true,
-    validate: [validator.isEmail, "Provide Correct Email"],
-  },
-  work: {
-    type: String,
-    // required: true,
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: [8, "A password should have minimum length of 8"],
-    select: false,
-  },
-  confirmpassword: {
-    type: String,
-    required: [true, "Please confirm your password"],
-    validate: {
-      validator: function (el) {
-        return el === this.password;
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Please provide Your name"],
+      // trim: true
+    },
+    email: {
+      type: String,
+      required: [true, "Please provide your email"],
+      unique: true,
+      validate: [validator.isEmail, "Provide Correct Email"],
+    },
+    work: {
+      type: String,
+      // required: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: [8, "A password should have minimum length of 8"],
+      select: false,
+    },
+    confirmpassword: {
+      type: String,
+      required: [true, "Please confirm your password"],
+      validate: {
+        validator: function (el) {
+          return el === this.password;
+        },
+        message: "Passwords are not same",
       },
-      message: "Passwords are not same",
     },
-  },
-  city: {
-    type: String,
-    require: [true, "Please provide your city name"],
-    enum: {
-      values: ["Ranchi", "Mumbai", "Delhi", "Chennai", "Pune"],
-      message: "City should be Ranchi, Mumbai, Delhi, Chennai,or Pune ",
+    city: {
+      type: String,
+      require: [true, "Please provide your city name"],
+      enum: {
+        values: ["Ranchi", "Mumbai", "Delhi", "Chennai", "Pune"],
+        message: "City should be Ranchi, Mumbai, Delhi, Chennai,or Pune ",
+      },
     },
+    role: {
+      type: String,
+      enum: ["admin", "user"],
+      default: "user",
+    },
+    cityId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "City",
+    },
+    likedPosts: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "Post",
+      },
+    ],
+    passwordChangedAt: Date,
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
+    verified: {
+      type: Boolean,
+      default: false,
+      select: false,
+    },
+    profile: String,
+    verifyToken: String,
+    verifyTokenExpires: Date,
   },
-  role: {
-    type: String,
-    enum: ["admin", "user"],
-    default: "user",
-    select: false,
-  },
-  cityId: {
-    type: mongoose.Schema.ObjectId,
-    ref: "City",
-  },
-  passwordChangedAt: Date,
-  active: {
-    type: Boolean,
-    default: true,
-    select: false,
-  },
-  verified: {
-    type: Boolean,
-    default: false,
-    select: false,
-  },
-  profile: String,
-  verifyToken: String,
-  verifyTokenExpires: Date,
-});
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
+userSchema.virtual("yourPosts", {
+  ref: "Post",
+  foreignField: "user",
+  localField: "_id",
+});
 // we area hashing
 userSchema.pre("save", async function (next) {
   // console.log('hi i am in befor e hashing ');

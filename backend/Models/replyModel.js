@@ -36,7 +36,7 @@ const replySchema = new mongoose.Schema({
 });
 
 replySchema.pre(/^find/, function () {
-  this.populate({ path: "user", select: "name _id profile role" });
+  this.populate({ path: "user", select: "name _id profile role city" });
 });
 const Reply = mongoose.model("Reply", replySchema);
 module.exports = Reply;
